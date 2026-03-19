@@ -188,6 +188,14 @@ async def remove_from_cart(product_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Product).filter(Product.id == product_id))
     product = result.scalar_one_or_none()
 
+    if not product:
+        # Product no longer exists; clean up orphaned cart item and report conflict
+        await db.delete(cart_item)
+        await db.commit()
+        raise HTTPException(
+            status_code=409,
+            detail="Associated product not found; cart item has been removed",
+        )
     product.stock += cart_item.quantity
     await db.delete(cart_item)
     await db.commit()

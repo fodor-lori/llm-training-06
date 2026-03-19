@@ -58,7 +58,7 @@
 									{item.product.name}
 								</p>
 								<p class="font-inter text-[10.7px] text-[#717182]">
-									{item.quantity} x ${item.product.price}
+									{item.quantity} x ${item.product.price.toFixed(2)}
 								</p>
 							</div>
 							<button

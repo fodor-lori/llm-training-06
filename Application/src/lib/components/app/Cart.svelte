@@ -39,6 +39,7 @@
 				<button
 					class="inline-flex h-[20px] w-[20px] items-center justify-center rounded-full hover:bg-[#F3F3F5]"
 					onclick={() => (isOpen = false)}
+					aria-label="Close cart"
 				>
 					<X class="h-[12px] w-[12px] text-[#717182]" />
 				</button>

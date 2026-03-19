@@ -65,6 +65,7 @@
 								class="ml-2 inline-flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full hover:bg-red-50"
 								onclick={() => onRemove(item.product_id)}
 								title="Remove from cart"
+								aria-label={`Remove ${item.product.name} from cart`}
 							>
 								<X class="h-[10px] w-[10px] text-[#D4183D]" />
 							</button>

@@ -5,3 +5,10 @@ type Product = {
 	description: string | null;
 	stock: number;
 };
+
+type CartItem = {
+	id: number;
+	product_id: number;
+	quantity: number;
+	product: Product;
+};

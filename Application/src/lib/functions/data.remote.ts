@@ -72,3 +72,39 @@ export const deleteProduct = command(v.number(), async (id) => {
 		throw new Error('Failed to delete product');
 	}
 });
+
+export const getCart = query(async () => {
+	const result = await fetch(`${API_BASE_URL}/cart`);
+
+	if (!result.ok) {
+		throw new Error('Failed to fetch cart');
+	}
+	const data = await result.json();
+	return data;
+});
+
+export const addToCart = command(v.number(), async (productId) => {
+	const result = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+		method: 'POST'
+	});
+
+	if (!result.ok) {
+		const error = await result.json();
+		throw new Error(error.detail || 'Failed to add to cart');
+	}
+
+	return result.json();
+});
+
+export const removeFromCart = command(v.number(), async (productId) => {
+	const result = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+		method: 'DELETE'
+	});
+
+	if (!result.ok) {
+		const error = await result.json();
+		throw new Error(error.detail || 'Failed to remove from cart');
+	}
+
+	return result.json();
+});

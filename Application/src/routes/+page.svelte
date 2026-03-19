@@ -1,13 +1,15 @@
 <script lang="ts">
+	import Cart from '$lib/components/app/Cart.svelte';
 	import ProductCard from '$lib/components/app/ProductCard.svelte';
 	import ProductDeleteDialog from '$lib/components/app/ProductDeleteDialog.svelte';
 	import ProductDetailsDialog from '$lib/components/app/ProductDetailsDialog.svelte';
 	import ProductFormDialog from '$lib/components/app/ProductFormDialog.svelte';
-	import { getProducts } from '$lib/functions/data.remote';
+	import { addToCart, getCart, getProducts, removeFromCart } from '$lib/functions/data.remote';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Search from '@lucide/svelte/icons/search';
 
 	const query = getProducts();
+	const cartQuery = getCart();
 
 	let isProductDialogOpen: boolean = $state(false);
 	let isDeleteDialogOpen: boolean = $state(false);
@@ -40,6 +42,22 @@
 		selectedProduct = product;
 		isDetailsDialogOpen = true;
 	}
+
+	async function handleAddToCart(product: Product) {
+		try {
+			await addToCart(product.id).updates(getCart(), getProducts());
+		} catch (error) {
+			console.error('Failed to add product to cart', error);
+		}
+	}
+
+	async function handleRemoveFromCart(productId: number) {
+		try {
+			await removeFromCart(productId).updates(getCart(), getProducts());
+		} catch (error) {
+			console.error('Failed to remove product from cart', error);
+		}
+	}
 </script>
 
 {#if query.error}
@@ -47,7 +65,7 @@
 {:else if query.loading}
 	<p>Loading products...</p>
 {:else}
-	<div class="mx-auto max-w-7xl px-[160px] py-[21px]">
+	<div class="mx-auto flex min-h-screen max-w-7xl flex-col px-[160px] py-[21px]">
 		<h1 class="font-inter text-[13.2px] leading-[1.59em] text-[#0A0A0A]">Product Management</h1>
 		<div class="mt-[28px] mb-[21px] flex items-center gap-4">
 			<div class="relative">
@@ -74,8 +92,18 @@
 					onViewClick={() => openDetailsDialog(product)}
 					onEditClick={() => openProductDialog(product)}
 					onDeleteClick={() => openDeleteDialog(product)}
+					onAddToCart={() => handleAddToCart(product)}
 				/>
 			{/each}
+		</div>
+		<div class="sticky bottom-4 z-50 mt-auto w-fit pt-[21px]">
+			{#if cartQuery?.error}
+				<p class="text-xs text-red-600">Error loading cart.</p>
+			{:else if cartQuery?.loading}
+				<p class="text-xs text-gray-500">Loading cart...</p>
+			{:else}
+				<Cart items={cartQuery.current ?? []} onRemove={handleRemoveFromCart} />
+			{/if}
 		</div>
 	</div>
 {/if}

@@ -6,9 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from config import settings
-from database import Product, create_tables, get_db
+from database import CartItem, Product, create_tables, get_db
 
 
 class ProductDTO(BaseModel):
@@ -39,6 +40,16 @@ class ProductResponse(BaseModel):
     price: float
     description: str | None
     stock: int
+
+    class Config:
+        from_attributes = True
+
+
+class CartItemResponse(BaseModel):
+    id: int
+    product_id: int
+    quantity: int
+    product: ProductResponse
 
     class Config:
         from_attributes = True
@@ -122,6 +133,73 @@ async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
     await db.delete(product)
     await db.commit()
     return {"message": f"Product {product_id} deleted successfully"}
+
+
+@app.get("/cart/", response_model=List[CartItemResponse])
+async def get_cart(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(CartItem).options(selectinload(CartItem.product))
+    )
+    return result.scalars().all()
+
+
+@app.post("/cart/{product_id}", response_model=CartItemResponse)
+async def add_to_cart(product_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Product).filter(Product.id == product_id))
+    product = result.scalar_one_or_none()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if product.stock <= 0:
+        raise HTTPException(status_code=400, detail="Product out of stock")
+
+    cart_result = await db.execute(
+        select(CartItem).filter(CartItem.product_id == product_id)
+    )
+    cart_item = cart_result.scalar_one_or_none()
+
+    if cart_item:
+        cart_item.quantity += 1
+    else:
+        cart_item = CartItem(product_id=product_id, quantity=1)
+        db.add(cart_item)
+
+    product.stock -= 1
+    await db.commit()
+    await db.refresh(cart_item)
+    await db.refresh(product)
+
+    return CartItemResponse(
+        id=cart_item.id,
+        product_id=cart_item.product_id,
+        quantity=cart_item.quantity,
+        product=ProductResponse.model_validate(product),
+    )
+
+
+@app.delete("/cart/{product_id}")
+async def remove_from_cart(product_id: int, db: AsyncSession = Depends(get_db)):
+    cart_result = await db.execute(
+        select(CartItem).filter(CartItem.product_id == product_id)
+    )
+    cart_item = cart_result.scalar_one_or_none()
+    if not cart_item:
+        raise HTTPException(status_code=404, detail="Item not in cart")
+
+    result = await db.execute(select(Product).filter(Product.id == product_id))
+    product = result.scalar_one_or_none()
+
+    if not product:
+        # Product no longer exists; clean up orphaned cart item and report conflict
+        await db.delete(cart_item)
+        await db.commit()
+        raise HTTPException(
+            status_code=409,
+            detail="Associated product not found; cart item has been removed",
+        )
+    product.stock += cart_item.quantity
+    await db.delete(cart_item)
+    await db.commit()
+    return {"message": f"Product {product_id} removed from cart"}
 
 
 if __name__ == "__main__":

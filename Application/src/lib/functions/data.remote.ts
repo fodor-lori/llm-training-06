@@ -102,6 +102,9 @@ export const removeFromCart = command(v.number(), async (productId) => {
 	});
 
 	if (!result.ok) {
-		throw new Error('Failed to remove from cart');
+		const error = await result.json();
+		throw new Error(error.detail || 'Failed to remove from cart');
 	}
+
+	return result.json();
 });

@@ -89,7 +89,13 @@
 			{/each}
 		</div>
 		<div class="sticky bottom-4 z-50 mt-auto w-fit pt-[21px]">
-			<Cart items={cartQuery.current ?? []} onRemove={handleRemoveFromCart} />
+			{#if cartQuery?.error}
+				<p class="text-xs text-red-600">Error loading cart.</p>
+			{:else if cartQuery?.loading}
+				<p class="text-xs text-gray-500">Loading cart...</p>
+			{:else}
+				<Cart items={cartQuery.current ?? []} onRemove={handleRemoveFromCart} />
+			{/if}
 		</div>
 	</div>
 {/if}

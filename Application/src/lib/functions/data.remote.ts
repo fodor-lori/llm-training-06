@@ -75,6 +75,10 @@ export const deleteProduct = command(v.number(), async (id) => {
 
 export const getCart = query(async () => {
 	const result = await fetch(`${API_BASE_URL}/cart`);
+
+	if (!result.ok) {
+		throw new Error('Failed to fetch cart');
+	}
 	const data = await result.json();
 	return data;
 });

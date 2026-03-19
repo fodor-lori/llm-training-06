@@ -44,11 +44,19 @@
 	}
 
 	async function handleAddToCart(product: Product) {
-		await addToCart(product.id);
+		try {
+			await addToCart(product.id).updates(getCart(), getProducts());
+		} catch (error) {
+			console.error('Failed to add product to cart', error);
+		}
 	}
 
 	async function handleRemoveFromCart(productId: number) {
-		await removeFromCart(productId);
+		try {
+			await removeFromCart(productId).updates(getCart(), getProducts());
+		} catch (error) {
+			console.error('Failed to remove product from cart', error);
+		}
 	}
 </script>
 

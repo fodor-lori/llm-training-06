@@ -2,19 +2,29 @@
 	import Trash from '@lucide/svelte/icons/trash';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Eye from '@lucide/svelte/icons/eye';
+	import Plus from '@lucide/svelte/icons/plus';
 
 	type Props = {
 		product: Product;
 		onViewClick: (product: Product) => void;
 		onEditClick: (product: Product) => void;
 		onDeleteClick: (product: Product) => void;
+		onAddToCart: (product: Product) => void;
 	};
-	let { product, onViewClick, onEditClick, onDeleteClick }: Props = $props();
+	let { product, onViewClick, onEditClick, onDeleteClick, onAddToCart }: Props = $props();
 </script>
 
 <div class="flex flex-col rounded-[13px] border border-black/10 bg-white">
-	<div class="px-[15px] pt-[15px]">
+	<div class="flex items-center justify-between px-[15px] pt-[15px]">
 		<h4 class="font-inter text-[13.2px] leading-none text-[#0A0A0A]">{product.name}</h4>
+		<button
+			class="inline-flex h-[24px] w-[24px] items-center justify-center rounded-full bg-[#030213] disabled:opacity-40"
+			onclick={() => onAddToCart(product)}
+			disabled={product.stock <= 0}
+			title="Add to cart"
+		>
+			<Plus class="h-[12px] w-[12px] text-white" strokeWidth={3} />
+		</button>
 	</div>
 	<div class="flex flex-1 flex-col gap-[14px] px-[15px] pt-[40px] pb-0">
 		{#if product.description}

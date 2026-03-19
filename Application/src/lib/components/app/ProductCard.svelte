@@ -22,6 +22,7 @@
 			onclick={() => onAddToCart(product)}
 			disabled={product.stock <= 0}
 			title="Add to cart"
+			aria-label="Add to cart"
 		>
 			<Plus class="h-[12px] w-[12px] text-white" strokeWidth={3} />
 		</button>
